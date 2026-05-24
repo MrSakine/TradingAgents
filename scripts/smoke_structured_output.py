@@ -94,6 +94,7 @@ def _make_pm_state(investment_plan: str, trader_plan: str):
         "sentiment_report": "Sentiment report.",
         "news_report": "News report.",
         "fundamentals_report": "Fundamentals report.",
+        "crypto_report": "",  # Optional crypto analyst report
         "investment_plan": investment_plan,
         "trader_investment_plan": trader_plan,
     }
