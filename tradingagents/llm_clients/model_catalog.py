@@ -72,6 +72,27 @@ _MINIMAX_MODELS: Dict[str, List[ModelOption]] = {
     ],
 }
 
+_ATESSA_MODELS: Dict[str, List[ModelOption]] = {
+    "quick": [
+        ("GPT-5.4 Mini - Fast OpenAI model (1× weight)", "gpt-5.4-mini"),
+        ("Claude Haiku 4.5 - Fast Anthropic model (2× weight)", "claude-haiku-4.5"),
+        ("Gemini 3.1 Flash Lite - Fast Google model (1× weight)", "gemini-3.1-flash-lite"),
+        ("DeepSeek V4 Flash - Fast reasoning (1× weight)", "deepseek-v4-flash"),
+        ("Mimo v2.5 - Xiaomi fast model (1× weight)", "mimo-v2.5"),
+        ("Custom model ID", "custom"),
+    ],
+    "deep": [
+        ("Claude Opus 4.7 - Latest Anthropic flagship (7× weight)", "claude-opus-4-7"),
+        ("GPT-5.5 - Latest OpenAI flagship (1× weight)", "gpt-5.5"),
+        ("Gemini 3.1 Pro - Google reasoning model (6× weight)", "gemini-3.1-pro"),
+        ("DeepSeek V4 Pro - Advanced reasoning (1× weight)", "deepseek-v4-pro"),
+        ("Kimi K2.6 - Moonshot model (3× weight)", "kimi-k2.6"),
+        ("GLM-5.1 - Zhipu flagship (3× weight)", "glm-5.1"),
+        ("MiniMax M2.7 - MiniMax flagship (3× weight)", "minimax-m2.7"),
+        ("Custom model ID", "custom"),
+    ],
+}
+
 
 MODEL_OPTIONS: ProviderModeOptions = {
     "openai": {
@@ -153,6 +174,10 @@ MODEL_OPTIONS: ProviderModeOptions = {
     # so the two provider keys share one model list.
     "minimax": _MINIMAX_MODELS,
     "minimax-cn": _MINIMAX_MODELS,
+    # Atessa: unified gateway supporting models from multiple providers via
+    # OpenAI-compatible API at atessa.top/v1. Models are selected based on
+    # cost efficiency (quota weight) and capability for trading analysis.
+    "atessa": _ATESSA_MODELS,
     # OpenRouter: fetched dynamically. Azure: any deployed model name.
     # Ollama display labels intentionally omit a "local" marker — the
     # endpoint is now configurable via OLLAMA_BASE_URL, so the same labels

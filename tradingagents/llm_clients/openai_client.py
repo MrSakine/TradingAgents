@@ -156,6 +156,7 @@ _PROVIDER_BASE_URL = {
     "glm-cn":     "https://open.bigmodel.cn/api/paas/v4/",
     "minimax":    "https://api.minimax.io/v1",
     "minimax-cn": "https://api.minimaxi.com/v1",
+    "atessa":     "https://atessa.top/v1",
     "openrouter": "https://openrouter.ai/api/v1",
     "ollama":     "http://localhost:11434/v1",
 }
