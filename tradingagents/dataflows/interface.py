@@ -22,6 +22,25 @@ from .alpha_vantage import (
     get_news as get_alpha_vantage_news,
     get_global_news as get_alpha_vantage_global_news,
 )
+from .coingecko import (
+    get_crypto_price_data,
+    get_crypto_fundamentals as get_coingecko_crypto_fundamentals,
+    get_defi_metrics as get_coingecko_defi_metrics,
+    get_stablecoin_metrics as get_coingecko_stablecoin_metrics,
+    get_memecoin_social_metrics as get_coingecko_memecoin_social,
+)
+from .defillama import (
+    get_protocol_tvl,
+    get_stablecoin_data,
+)
+from .coinmarketcap import (
+    get_crypto_quotes as get_cmc_crypto_quotes
+)
+from .binance import (
+    get_crypto_price_data_binance,
+    get_crypto_fundamentals_binance,
+    get_binance_market_depth_metrics,
+)
 from .alpha_vantage_common import AlphaVantageRateLimitError
 
 # Configuration and routing logic
@@ -63,6 +82,10 @@ TOOLS_CATEGORIES = {
 VENDOR_LIST = [
     "yfinance",
     "alpha_vantage",
+    "coingecko",
+    "coinmarketcap",
+    "defillama",
+    "binance"
 ]
 
 # Mapping of methods to their vendor-specific implementations
@@ -106,6 +129,30 @@ VENDOR_METHODS = {
     "get_insider_transactions": {
         "alpha_vantage": get_alpha_vantage_insider_transactions,
         "yfinance": get_yfinance_insider_transactions,
+    },
+    "get_crypto_fundamentals": {
+        "coingecko": get_coingecko_crypto_fundamentals,
+        "coinmarketcap": get_cmc_crypto_quotes,
+    },
+    "get_defi_metrics": {
+        "coingecko": get_coingecko_defi_metrics,
+        "defillama": get_protocol_tvl,
+    },
+    "get_stablecoin_metrics": {
+        "coingecko": get_coingecko_stablecoin_metrics,
+        "defillama": get_stablecoin_data,
+    },
+    "get_memecoin_social_metrics": {
+        "coingecko": get_coingecko_memecoin_social,
+    },
+    "get_crypto_fundamentals": {
+        "coingecko": get_coingecko_crypto_fundamentals,
+        "binance": get_crypto_fundamentals_binance,
+    },
+    "get_stock_data": {
+        "alpha_vantage": get_alpha_vantage_stock,
+        "yfinance": get_YFin_data_online,
+        "binance": get_crypto_price_data_binance,
     },
 }
 

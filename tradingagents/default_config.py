@@ -96,11 +96,16 @@ DEFAULT_CONFIG = _apply_env_overrides({
         "core_stock_apis": "yfinance",       # Options: alpha_vantage, yfinance
         "technical_indicators": "yfinance",  # Options: alpha_vantage, yfinance
         "fundamental_data": "yfinance",      # Options: alpha_vantage, yfinance
-        "news_data": "yfinance",             # Options: alpha_vantage, yfinance
+        "news_data": "yfinance",             # Options: alpha_vantage, yfinance,
+        "crypto_data": "binance,coingecko",          # Default for crypto metrics
     },
     # Tool-level configuration (takes precedence over category-level)
     "tool_vendors": {
-        # Example: "get_stock_data": "alpha_vantage",  # Override category default
+        # Example: "get_stock_data": "alpha_vantage",  # Override category default,
+        "get_crypto_fundamentals": "coingecko",
+        "get_defi_metrics": "defillama",
+        "get_stablecoin_metrics": "coingecko,defillama",  # Fallback chain
+        "get_memecoin_social_metrics": "coingecko",
     },
     # Benchmark for alpha calculation in the reflection layer.
     # ``benchmark_ticker`` (when set) overrides the suffix map for all

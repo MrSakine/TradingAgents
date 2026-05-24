@@ -38,7 +38,12 @@ from tradingagents.agents.utils.agent_utils import (
     get_insider_transactions,
     get_global_news
 )
-
+from tradingagents.agents.utils.crypto_tools import (
+    get_crypto_fundamentals,
+    get_defi_metrics,
+    get_stablecoin_metrics,
+    get_memecoin_social_metrics,
+)
 from .checkpointer import checkpoint_step, clear_checkpoint, get_checkpointer, thread_id
 from .conditional_logic import ConditionalLogic
 from .setup import GraphSetup
@@ -187,6 +192,14 @@ class TradingAgentsGraph:
                     get_balance_sheet,
                     get_cashflow,
                     get_income_statement,
+                ]
+            ),
+            "crypto": ToolNode(
+                [
+                    get_crypto_fundamentals,
+                    get_defi_metrics,
+                    get_stablecoin_metrics,
+                    get_memecoin_social_metrics,
                 ]
             ),
         }
