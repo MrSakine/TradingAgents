@@ -1,13 +1,17 @@
+from .validators import validate_model
+from .capabilities import get_capabilities
+from .base_client import BaseLLMClient, normalize_content
+from .api_key_env import get_api_key_env
+import logging
 import os
+import time
 from typing import Any, Optional
 
+import httpx
 from langchain_core.messages import AIMessage
 from langchain_openai import ChatOpenAI
 
-from .api_key_env import get_api_key_env
-from .base_client import BaseLLMClient, normalize_content
-from .capabilities import get_capabilities
-from .validators import validate_model
+logger = logging.getLogger(__name__)
 
 
 class NormalizedChatOpenAI(ChatOpenAI):
@@ -136,6 +140,79 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
         return payload
 
 
+class AtessaChatOpenAI(NormalizedChatOpenAI):
+    """Atessa-specific client that bypasses OpenAI SDK request stack.
+
+    Atessa's Cloudflare WAF accepts raw ``httpx`` requests but may block
+    requests emitted through the OpenAI Python SDK path. This subclass keeps
+    LangChain prompt/tool plumbing (payload construction, parsing) while
+    sending the final HTTP request directly via ``httpx``.
+    """
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        payload = self._get_request_payload(messages, stop=stop, **kwargs)
+        base_url = self.openai_api_base or "https://atessa.top/v1"
+        url = f"{base_url.rstrip('/')}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {self.openai_api_key.get_secret_value() if self.openai_api_key else ''}",
+            "Content-Type": "application/json",
+        }
+        # Longer read timeout + retry/backoff for multi-agent requests.
+        base_timeout = kwargs.get("timeout", getattr(
+            self, "request_timeout", None) or 90.0)
+        if isinstance(base_timeout, (int, float)):
+            timeout = httpx.Timeout(connect=15.0, read=float(
+                base_timeout), write=30.0, pool=30.0)
+        else:
+            timeout = base_timeout
+
+        max_retries = int(kwargs.get("max_retries", 3) or 3)
+        retryable_statuses = {408, 409, 429, 500, 502, 503, 504}
+
+        last_exc: Exception | None = None
+        resp = None
+        for attempt in range(max_retries + 1):
+            try:
+                with httpx.Client(timeout=timeout) as client:
+                    resp = client.post(url, headers=headers, json=payload)
+
+                if resp.status_code in retryable_statuses and attempt < max_retries:
+                    sleep_s = min(2 ** attempt, 8)
+                    logger.warning(
+                        "Atessa retryable status=%s; retrying in %ss (attempt %s/%s)",
+                        resp.status_code,
+                        sleep_s,
+                        attempt + 1,
+                        max_retries,
+                    )
+                    time.sleep(sleep_s)
+                    continue
+
+                break
+            except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.RemoteProtocolError) as exc:
+                last_exc = exc
+                if attempt >= max_retries:
+                    raise
+                sleep_s = min(2 ** attempt, 8)
+                logger.warning(
+                    "Atessa transient error=%s; retrying in %ss (attempt %s/%s)",
+                    type(exc).__name__,
+                    sleep_s,
+                    attempt + 1,
+                    max_retries,
+                )
+                time.sleep(sleep_s)
+
+        if resp is None and last_exc is not None:
+            raise last_exc
+
+        if resp.status_code >= 400:
+            raise RuntimeError(
+                f"Atessa request failed: {resp.status_code} {resp.text}")
+        response = resp.json()
+        return self._create_chat_result(response)
+
+
 # Kwargs forwarded from user config to ChatOpenAI
 _PASSTHROUGH_KWARGS = (
     "timeout", "max_retries", "reasoning_effort",
@@ -206,7 +283,8 @@ class OpenAIClient(BaseLLMClient):
         # client (e.g. a corporate proxy) takes precedence over the
         # provider default so users can route through their own gateway.
         if self.provider in _PROVIDER_BASE_URL:
-            llm_kwargs["base_url"] = self.base_url or _resolve_provider_base_url(self.provider)
+            llm_kwargs["base_url"] = self.base_url or _resolve_provider_base_url(
+                self.provider)
             api_key_env = get_api_key_env(self.provider)
             if api_key_env:
                 api_key = os.environ.get(api_key_env)
@@ -239,6 +317,8 @@ class OpenAIClient(BaseLLMClient):
             chat_cls = DeepSeekChatOpenAI
         elif self.provider in ("minimax", "minimax-cn"):
             chat_cls = MinimaxChatOpenAI
+        elif self.provider == "atessa":
+            chat_cls = AtessaChatOpenAI
         else:
             chat_cls = NormalizedChatOpenAI
         return chat_cls(**llm_kwargs)
