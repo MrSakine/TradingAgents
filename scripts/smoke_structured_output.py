@@ -9,6 +9,7 @@ for Anthropic) returns clean instances on the schemas we ship.
 
 Usage:
     OPENAI_API_KEY=... python scripts/smoke_structured_output.py openai
+    ATESSA_API_KEY=... python scripts/smoke_structured_output.py atessa
     GOOGLE_API_KEY=... python scripts/smoke_structured_output.py google
     ANTHROPIC_API_KEY=... python scripts/smoke_structured_output.py anthropic
     DEEPSEEK_API_KEY=... python scripts/smoke_structured_output.py deepseek
@@ -33,6 +34,7 @@ from tradingagents.llm_clients import create_llm_client
 
 PROVIDER_DEFAULTS = {
     "openai": ("gpt-5.4-mini", None),
+    "atessa": ("gpt-5.4-mini", None),
     "google": ("gemini-2.5-flash", None),
     "anthropic": ("claude-sonnet-4-6", None),
     "deepseek": ("deepseek-chat", None),
